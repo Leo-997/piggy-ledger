@@ -262,7 +262,7 @@
             <button class="btn btn-outline" onclick="toggleThemeModal()">关闭</button>
         </div>
     </div>
-    
+
     <div class="tab-bar" id="main-tab-bar">
         <div class="tab-item active" onclick="switchTab('home')">
             <i class="fa-solid fa-list-ul"></i><span>明细</span>
@@ -315,7 +315,7 @@
         blue:   { primary: "#007AFF", bg: "#F0F8FF", name: "天空蓝" },
         green:  { primary: "#34C759", bg: "#F0FFF4", name: "薄荷绿" },
         purple: { primary: "#AF52DE", bg: "#F3F0FF", name: "薰衣草" },
-        dark:   { primary: "#FFD60A", bg: "#1C1C1E", name: "暗夜黑" } // 暗色模式尝鲜
+        dark:   { primary: "#FFD60A", bg: "#6e6e7d", name: "暗灰色" } // 暗色模式尝鲜
     };
 
     let currentUser = null;
@@ -382,15 +382,17 @@
         });
     }
 
-    window.setTheme = (themeKey) => {
+    // 🎨 修改后的设置主题函数
+    // 参数 shouldSave: 是否同步保存到云端 (默认 true)
+    window.setTheme = (themeKey, shouldSave = true) => {
         const t = themes[themeKey];
         if(!t) return;
         
         const root = document.documentElement;
         root.style.setProperty('--primary', t.primary);
-        root.style.setProperty('--primary-light', t.primary + '26'); // 15% opacity
+        root.style.setProperty('--primary-light', t.primary + '26'); 
         
-        // 特殊处理暗色模式
+        // 切换暗色/亮色模式
         if(themeKey === 'dark') {
             document.body.classList.add('dark-mode');
             root.style.setProperty('--bg', '#000');
@@ -401,8 +403,23 @@
             root.style.setProperty('--text-main', '#000');
         }
 
+        // 1. 本地缓存 (为了下次打开网页还没登录时能先显示)
         localStorage.setItem('piggy_theme', themeKey);
-        toggleThemeModal(); // 选完自动关闭
+        
+        // 2. 🔥 核心更新：如果用户已登录，且需要保存，则同步到云端数据库
+        if (currentUser && shouldSave) {
+            currentUser.set('theme', themeKey); // 给用户对象设置 'theme' 字段
+            currentUser.save().catch(e => console.error("主题同步失败:", e));
+        }
+
+        // 关闭弹窗
+        const modal = document.getElementById('theme-modal');
+        if(!modal.classList.contains('hidden')) {
+            toggleThemeModal();
+        }
+        
+        // 更新一下弹窗里的选中状态
+        renderThemeOptions();
     }
     
     // 初始化加载主题
@@ -458,7 +475,15 @@
         document.getElementById('auth-view').classList.add('hidden');
         document.getElementById('app-view').classList.remove('hidden');
         document.getElementById('user-display').innerText = currentUser.getUsername().split('@')[0];
-        // 🔥 新增这两行：先加载数据，同时去后台获取最新汇率
+        
+        // 🔥 新增：登录成功后，检查云端有没有存过主题
+        const cloudTheme = currentUser.get('theme'); 
+        if (cloudTheme && themes[cloudTheme]) {
+            // 如果云端有，就应用云端的主题
+            // 传入 false 表示“只变色，别再往云端存一次了”
+            setTheme(cloudTheme, false); 
+        }
+
         loadExpenses(); 
         fetchExchangeRate();
     }
