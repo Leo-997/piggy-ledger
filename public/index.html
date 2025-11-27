@@ -133,6 +133,72 @@
         body.dark-mode { background: #000; color: white; }
         body.dark-mode .expense-card, body.dark-mode .modal-content, body.dark-mode .header { background: #1C1C1E; color: white; }
         body.dark-mode input, body.dark-mode select { background: #2C2C2E; border-color: #3A3A3C; color: white; }
+
+        /* =========================================
+           🌓 暗色模式深度修复补丁 (Dark Mode Fixes)
+           把这段代码放在 CSS 的最后面
+           ========================================= */
+        
+        /* 1. 修复统计页：白色容器变深色 */
+        body.dark-mode .chart-container,
+        body.dark-mode .stats-control,
+        body.dark-mode .tab-bar,
+        body.dark-mode .swipe-container,
+        body.dark-mode .expense-card {
+            background-color: #1C1C1E !important; /* 深灰色背景 */
+            border-color: #2C2C2E;
+        }
+
+        /* 2. 修复切换条 (支出/收入，周/月) 的背景 */
+        body.dark-mode .segment-control,
+        body.dark-mode .type-toggle {
+            background-color: #2C2C2E;
+        }
+        
+        /* 3. 修复切换按钮被选中时的样式 */
+        body.dark-mode .segment-btn.active,
+        body.dark-mode .type-option.active {
+            background-color: #48484A; /* 比背景稍亮一点 */
+            color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+
+        /* 4. 修复文字颜色 (副标题变浅灰，防止太刺眼) */
+        body.dark-mode .cat-name,
+        body.dark-mode .card-date,
+        body.dark-mode .day-header {
+            color: #98989D;
+        }
+
+        /* 5. 修复总金额颜色 */
+        body.dark-mode #total-spending,
+        body.dark-mode #symbol-total {
+            color: white;
+        }
+
+        /* 6. 修复汇率输入框 (原来是浅黄色背景，暗色模式下太亮) */
+        body.dark-mode .rate-input-box {
+            background-color: #2C2C2E;
+            border-color: #48484A;
+            color: #FFD60A; /* 黄色文字 */
+        }
+        body.dark-mode .rate-input-box input {
+            background-color: #3A3A3C !important;
+            border-color: #48484A;
+            color: white;
+        }
+
+        /* 7. 修复币种选择下拉框 */
+        body.dark-mode select {
+            background-color: #2C2C2E;
+            color: white;
+            border-color: #3A3A3C;
+        }
+        
+        /* 8. 修复底部导航栏的分割线 */
+        body.dark-mode .tab-bar {
+            border-top: 1px solid #2C2C2E;
+        }
     </style>
 </head>
 <body>
