@@ -216,8 +216,8 @@
 
             <div id="rate-container" class="rate-input-box hidden">
                 <i class="fa-solid fa-arrow-right-arrow-left"></i>
-                <span>当前汇率 (1 AUD = ? CNY)</span>
-                <input type="number" id="inp-rate" value="4.7">
+                <span>当前汇率</span>
+                <input type="number" id="inp-rate" step="0.01" style="background:#eee; color:#555;">
             </div>
 
             <select id="inp-category" style="margin-top: 20px;">
@@ -320,7 +320,9 @@
         document.getElementById('auth-view').classList.add('hidden');
         document.getElementById('app-view').classList.remove('hidden');
         document.getElementById('user-display').innerText = currentUser.getUsername().split('@')[0];
-        loadExpenses(); // 登录成功后拉取数据
+        // 🔥 新增这两行：先加载数据，同时去后台获取最新汇率
+        loadExpenses(); 
+        fetchExchangeRate();
     }
 
     function showAuth() {
@@ -329,6 +331,27 @@
     }
 
     // --- 数据操作部分 (核心修改) ---
+    // --- 🌍 新增：自动获取汇率 ---
+    async function fetchExchangeRate() {
+        try {
+            // 使用免费公开的 API 获取 AUD -> CNY 汇率
+            // ✅ 这里的 SERVER_URL 就是你在上面定义的 https://api.piggy-ledger.xyz
+            // 我们让他去访问 /rate 这个暗号
+            const response = await fetch(SERVER_URL + '/rate');
+            const data = await response.json();
+            if (data && data.rates && data.rates.CNY) {
+                globalRate = data.rates.CNY; // 更新全局汇率
+                console.log("今日汇率已更新:", globalRate);
+                
+                // 如果页面上有汇率输入框，也顺便更新一下显示
+                const rateInput = document.getElementById('inp-rate');
+                if(rateInput) rateInput.value = globalRate.toFixed(2);
+            }
+        } catch (e) {
+            console.error("汇率获取失败，使用默认值 4.7", e);
+            // 获取失败时不做打扰，继续使用默认值
+        }
+    }
 
     // 获取(刷新)数据
     async function loadExpenses() {
@@ -441,16 +464,15 @@
 
     window.toggleGlobalCurrency = () => {
         if (globalCurrency === 'AUD') {
-            const input = prompt("切换到人民币 (CNY) 模式\n请输入当前汇率 (1 AUD = ? CNY)", globalRate);
-            if (input === null) return;
-            const rate = parseFloat(input);
-            if (!rate || rate <= 0) return alert("汇率必须是正数");
-            globalRate = rate;
-            globalCurrency = 'CNY';
-            document.getElementById('inp-rate').value = rate;
+            // 简化版：不再需要输入，直接确认
+            //toFixed(2)保留两位小数显示
+            if(confirm(`当前实时汇率: 1 AUD ≈ ${globalRate.toFixed(2)} CNY\n确定切换到人民币显示吗？`)) {
+                globalCurrency = 'CNY';
+            }
         } else {
-            if (!confirm("是否切换回澳元 (AUD) 模式？")) return;
-            globalCurrency = 'AUD';
+            if (confirm("是否切换回澳元 (AUD) 模式？")) {
+                globalCurrency = 'AUD';
+            }
         }
         updateUIForCurrency();
     }
@@ -565,9 +587,13 @@
         const cur = document.getElementById('inp-currency').value;
         const rateBox = document.getElementById('rate-container');
         const symbol = document.getElementById('modal-symbol');
+        const rateInput = document.getElementById('inp-rate');
+
         if (cur === 'CNY') {
             rateBox.classList.remove('hidden');
             symbol.innerText = '￥';
+            // 切换到 CNY 时，自动填入当前获取到的最新汇率
+            rateInput.value = globalRate.toFixed(2);
         } else {
             rateBox.classList.add('hidden');
             symbol.innerText = '$';
