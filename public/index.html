@@ -254,6 +254,15 @@
         </div>
     </div>
 
+    <div id="theme-modal" class="modal-overlay hidden" onclick="if(event.target === this) toggleThemeModal()">
+        <div class="modal-content" style="max-width: 300px;">
+            <h3 style="text-align:center; margin-top:0;">选择主题风格</h3>
+            <div class="theme-selector" id="theme-list">
+                </div>
+            <button class="btn btn-outline" onclick="toggleThemeModal()">关闭</button>
+        </div>
+    </div>
+    
     <div class="tab-bar" id="main-tab-bar">
         <div class="tab-item active" onclick="switchTab('home')">
             <i class="fa-solid fa-list-ul"></i><span>明细</span>
