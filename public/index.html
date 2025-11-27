@@ -280,6 +280,35 @@
         serverURLs: SERVER_URL
     });
 
+    // 🎨 升级版类别配置：包含图标和颜色
+    const categoryConfig = {
+        expense: [
+            { name: "餐饮", icon: "fa-utensils", color: "#FF9500" }, // 橙色
+            { name: "交通", icon: "fa-car", color: "#007AFF" },      // 蓝色
+            { name: "购物", icon: "fa-bag-shopping", color: "#FF2D55" }, // 红色
+            { name: "娱乐", icon: "fa-gamepad", color: "#AF52DE" },  // 紫色
+            { name: "居住", icon: "fa-house", color: "#5856D6" },    // 深紫
+            { name: "医疗", icon: "fa-briefcase-medical", color: "#FF3B30" }, // 鲜红
+            { name: "其他", icon: "fa-box-open", color: "#8E8E93" }  // 灰色
+        ],
+        income: [
+            { name: "工资", icon: "fa-money-bill-wave", color: "#34C759" }, // 绿色
+            { name: "兼职", icon: "fa-briefcase", color: "#30B0C7" },     // 青色
+            { name: "理财", icon: "fa-chart-line", color: "#FF9500" },    // 橙色
+            { name: "礼金", icon: "fa-gift", color: "#FF2D55" },          // 红色
+            { name: "其他", icon: "fa-circle-plus", color: "#8E8E93" }    // 灰色
+        ]
+    };
+    
+    // 主题配色方案
+    const themes = {
+        pink:   { primary: "#FF8296", bg: "#F2F2F7", name: "小猪粉" },
+        blue:   { primary: "#007AFF", bg: "#F0F8FF", name: "天空蓝" },
+        green:  { primary: "#34C759", bg: "#F0FFF4", name: "薄荷绿" },
+        purple: { primary: "#AF52DE", bg: "#F3F0FF", name: "薰衣草" },
+        dark:   { primary: "#FFD60A", bg: "#1C1C1E", name: "暗夜黑" } // 暗色模式尝鲜
+    };
+
     let currentUser = null;
     let allExpenses = [];
     let myChart = null;
@@ -371,34 +400,7 @@
     const savedTheme = localStorage.getItem('piggy_theme') || 'pink';
     setTheme(savedTheme);
 
-    // 🎨 升级版类别配置：包含图标和颜色
-    const categoryConfig = {
-        expense: [
-            { name: "餐饮", icon: "fa-utensils", color: "#FF9500" }, // 橙色
-            { name: "交通", icon: "fa-car", color: "#007AFF" },      // 蓝色
-            { name: "购物", icon: "fa-bag-shopping", color: "#FF2D55" }, // 红色
-            { name: "娱乐", icon: "fa-gamepad", color: "#AF52DE" },  // 紫色
-            { name: "居住", icon: "fa-house", color: "#5856D6" },    // 深紫
-            { name: "医疗", icon: "fa-briefcase-medical", color: "#FF3B30" }, // 鲜红
-            { name: "其他", icon: "fa-box-open", color: "#8E8E93" }  // 灰色
-        ],
-        income: [
-            { name: "工资", icon: "fa-money-bill-wave", color: "#34C759" }, // 绿色
-            { name: "兼职", icon: "fa-briefcase", color: "#30B0C7" },     // 青色
-            { name: "理财", icon: "fa-chart-line", color: "#FF9500" },    // 橙色
-            { name: "礼金", icon: "fa-gift", color: "#FF2D55" },          // 红色
-            { name: "其他", icon: "fa-circle-plus", color: "#8E8E93" }    // 灰色
-        ]
-    };
     
-    // 主题配色方案
-    const themes = {
-        pink:   { primary: "#FF8296", bg: "#F2F2F7", name: "小猪粉" },
-        blue:   { primary: "#007AFF", bg: "#F0F8FF", name: "天空蓝" },
-        green:  { primary: "#34C759", bg: "#F0FFF4", name: "薄荷绿" },
-        purple: { primary: "#AF52DE", bg: "#F3F0FF", name: "薰衣草" },
-        dark:   { primary: "#FFD60A", bg: "#1C1C1E", name: "暗夜黑" } // 暗色模式尝鲜
-    };
 
     // --- 认证部分 ---
 
