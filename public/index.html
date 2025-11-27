@@ -116,6 +116,23 @@
         .tab-item span { font-size: 10px; font-weight: 500; }
         .tab-item.active { color: var(--primary); }
         .hidden { display: none !important; }
+
+        /* --- 🎨 新增：类别选择网格 --- */
+        .category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 15px; margin-bottom: 20px; }
+        .cat-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; opacity: 0.6; transition: all 0.2s; }
+        .cat-item.active { opacity: 1; transform: scale(1.1); }
+        .cat-icon-circle { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; margin-bottom: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .cat-name { font-size: 12px; color: #666; }
+        
+        /* --- 👕 新增：主题选择器 --- */
+        .theme-selector { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;}
+        .theme-dot { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); position: relative; }
+        .theme-dot.active::after { content: '✔'; color: white; position: absolute; left: 8px; top: 4px; font-size: 14px; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+
+        /* 暗色模式特殊适配 (可选) */
+        body.dark-mode { background: #000; color: white; }
+        body.dark-mode .expense-card, body.dark-mode .modal-content, body.dark-mode .header { background: #1C1C1E; color: white; }
+        body.dark-mode input, body.dark-mode select { background: #2C2C2E; border-color: #3A3A3C; color: white; }
     </style>
 </head>
 <body>
@@ -133,6 +150,10 @@
     <div class="header">
         <h1 id="page-title">账本</h1>
         <div class="header-right">
+            <div class="badge" onclick="toggleThemeModal()">
+                <i class="fa-solid fa-shirt"></i>
+            </div>
+            
             <div class="badge badge-primary" onclick="toggleGlobalCurrency()">
                 <i class="fa-solid fa-coins"></i> <span id="currency-display">$ 澳元</span>
             </div>
@@ -220,8 +241,9 @@
                 <input type="number" id="inp-rate" step="0.01" style="background:#eee; color:#555;">
             </div>
 
-            <select id="inp-category" style="margin-top: 20px;">
-                </select>
+            <input type="hidden" id="inp-category" value="">
+            <div id="category-grid-container" class="category-grid">
+                </div>
 
             <input type="date" id="inp-date">
             <input type="text" id="inp-note" placeholder="备注 (可选)">
@@ -268,9 +290,114 @@
     let globalRate = 4.7;
     let currentModalType = 'expense';
 
+    // --- 🎨 1. 渲染类别网格 (替代原来的下拉框) ---
+    function renderCategoryGrid(type) {
+        const container = document.getElementById('category-grid-container');
+        container.innerHTML = "";
+        const list = categoryConfig[type];
+        
+        // 默认选中第一个
+        if(!document.getElementById('inp-category').value) {
+            selectCategory(list[0].name);
+        }
+
+        list.forEach(cat => {
+            const isSelected = document.getElementById('inp-category').value === cat.name;
+            const activeClass = isSelected ? 'active' : '';
+            // 如果选中，图标显示鲜艳颜色；未选中则稍淡
+            const bgColor = cat.color; 
+            
+            container.innerHTML += `
+                <div class="cat-item ${activeClass}" onclick="selectCategory('${cat.name}')">
+                    <div class="cat-icon-circle" style="background: ${bgColor};">
+                        <i class="fa-solid ${cat.icon}"></i>
+                    </div>
+                    <div class="cat-name">${cat.name}</div>
+                </div>
+            `;
+        });
+    }
+
+    window.selectCategory = (name) => {
+        document.getElementById('inp-category').value = name;
+        // 重新渲染以更新选中状态 (虽然有点笨，但代码简单)
+        renderCategoryGrid(currentModalType); 
+    }
+
+    // --- 👕 2. 主题切换逻辑 ---
+    window.toggleThemeModal = () => {
+        const modal = document.getElementById('theme-modal');
+        modal.classList.toggle('hidden');
+        renderThemeOptions();
+    }
+
+    function renderThemeOptions() {
+        const container = document.getElementById('theme-list');
+        container.innerHTML = "";
+        Object.keys(themes).forEach(key => {
+            const t = themes[key];
+            const isCurrent = localStorage.getItem('piggy_theme') === key;
+            const activeClass = isCurrent ? 'active' : '';
+            container.innerHTML += `
+                <div class="theme-dot ${activeClass}" style="background:${t.primary}" onclick="setTheme('${key}')"></div>
+            `;
+        });
+    }
+
+    window.setTheme = (themeKey) => {
+        const t = themes[themeKey];
+        if(!t) return;
+        
+        const root = document.documentElement;
+        root.style.setProperty('--primary', t.primary);
+        root.style.setProperty('--primary-light', t.primary + '26'); // 15% opacity
+        
+        // 特殊处理暗色模式
+        if(themeKey === 'dark') {
+            document.body.classList.add('dark-mode');
+            root.style.setProperty('--bg', '#000');
+            root.style.setProperty('--text-main', '#fff');
+        } else {
+            document.body.classList.remove('dark-mode');
+            root.style.setProperty('--bg', t.bg);
+            root.style.setProperty('--text-main', '#000');
+        }
+
+        localStorage.setItem('piggy_theme', themeKey);
+        toggleThemeModal(); // 选完自动关闭
+    }
+    
+    // 初始化加载主题
+    const savedTheme = localStorage.getItem('piggy_theme') || 'pink';
+    setTheme(savedTheme);
+
+    // 🎨 升级版类别配置：包含图标和颜色
     const categoryConfig = {
-        expense: ["餐饮", "交通", "购物", "娱乐", "居住", "医疗", "其他"],
-        income: ["工资", "兼职", "理财", "礼金", "其他"]
+        expense: [
+            { name: "餐饮", icon: "fa-utensils", color: "#FF9500" }, // 橙色
+            { name: "交通", icon: "fa-car", color: "#007AFF" },      // 蓝色
+            { name: "购物", icon: "fa-bag-shopping", color: "#FF2D55" }, // 红色
+            { name: "娱乐", icon: "fa-gamepad", color: "#AF52DE" },  // 紫色
+            { name: "居住", icon: "fa-house", color: "#5856D6" },    // 深紫
+            { name: "医疗", icon: "fa-briefcase-medical", color: "#FF3B30" }, // 鲜红
+            { name: "其他", icon: "fa-box-open", color: "#8E8E93" }  // 灰色
+        ],
+        income: [
+            { name: "工资", icon: "fa-money-bill-wave", color: "#34C759" }, // 绿色
+            { name: "兼职", icon: "fa-briefcase", color: "#30B0C7" },     // 青色
+            { name: "理财", icon: "fa-chart-line", color: "#FF9500" },    // 橙色
+            { name: "礼金", icon: "fa-gift", color: "#FF2D55" },          // 红色
+            { name: "其他", icon: "fa-circle-plus", color: "#8E8E93" }    // 灰色
+        ]
+    };
+    
+    // 主题配色方案
+    const themes = {
+        pink:   { primary: "#FF8296", bg: "#F2F2F7", name: "小猪粉" },
+        blue:   { primary: "#007AFF", bg: "#F0F8FF", name: "天空蓝" },
+        green:  { primary: "#34C759", bg: "#F0FFF4", name: "薄荷绿" },
+        purple: { primary: "#AF52DE", bg: "#F3F0FF", name: "薰衣草" },
+        dark:   { primary: "#FFD60A", bg: "#1C1C1E", name: "暗夜黑" } // 暗色模式尝鲜
     };
 
     // --- 认证部分 ---
@@ -576,11 +703,8 @@
         document.getElementById('type-expense').className = type === 'expense' ? 'type-option active' : 'type-option';
         document.getElementById('type-income').className = type === 'income' ? 'type-option active' : 'type-option';
         
-        const catSelect = document.getElementById('inp-category');
-        catSelect.innerHTML = "";
-        categoryConfig[type].forEach(c => {
-            catSelect.innerHTML += `<option value="${c}">${c}</option>`;
-        });
+        // 🔥 改动：不再填充select，而是渲染网格
+        renderCategoryGrid(type);
     }
 
     window.onCurrencyChange = () => {
@@ -620,7 +744,9 @@
                 document.getElementById('inp-amount').value = displayVal;
                 
                 setTimeout(() => {
+                    // 🔥 改动：设置隐藏 input 的值，并延迟渲染一下确保 UI 正确
                     document.getElementById('inp-category').value = item.category;
+                    renderCategoryGrid(item.type || 'expense');
                 }, 50);
                 
                 document.getElementById('inp-date').valueAsDate = item.jsDate;
@@ -807,18 +933,12 @@
         });
     }
 
-    function getCategoryIcon(cat) {
-        if(cat.includes("餐饮")) return "fa-utensils";
-        if(cat.includes("交通")) return "fa-car";
-        if(cat.includes("购物")) return "fa-bag-shopping";
-        if(cat.includes("娱乐")) return "fa-gamepad";
-        if(cat.includes("居住")) return "fa-house";
-        if(cat.includes("医疗")) return "fa-notes-medical";
-        if(cat.includes("工资")) return "fa-money-bill-wave";
-        if(cat.includes("兼职")) return "fa-briefcase";
-        if(cat.includes("理财")) return "fa-chart-line";
-        if(cat.includes("礼金")) return "fa-gift";
-        return "fa-box-open";
+    function getCategoryIcon(catName) {
+        // 合并支出和收入的配置，一起查找
+        const allCats = [...categoryConfig.expense, ...categoryConfig.income];
+        const found = allCats.find(c => c.name === catName);
+        // 如果找到了就用配置的图标，没找到就默认显示个箱子
+        return found ? found.icon : "fa-box-open"; 
     }
 
     window.switchTab = (t) => {
