@@ -199,6 +199,20 @@
         body.dark-mode .tab-bar {
             border-top: 1px solid #2C2C2E;
         }
+        
+        /* ============== 🔧 终极修复：币种选择框 ============== */
+        /* 这里的 !important 是为了覆盖 HTML 里写死的 style="background: #fff" */
+        body.dark-mode #inp-currency {
+            background-color: #2C2C2E !important;
+            color: white !important;
+            border-color: #3A3A3C !important;
+        }
+        
+        /* 修复选项在某些浏览器里的背景 */
+        body.dark-mode #inp-currency option {
+            background-color: #1C1C1E;
+            color: white;
+        }
     </style>
 </head>
 <body>
