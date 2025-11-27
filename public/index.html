@@ -248,7 +248,8 @@
     // 🔥🔥🔥 请在这里填入你第一步获取的内容 🔥🔥🔥
     const APP_ID = "rVNwzu3Ejg8LXr4xXjTpc1TQ-MdYXbMMI";
     const APP_KEY = "a4lJshh9aKe6YSuXWgOODdpJ";
-    const SERVER_URL = "https://rvnwzu3e.api.lncldglobal.com"; // 也就是 API 域名，例如 https://xxx.api.lncldglobal.com
+    // ✅ 必须改成这个，流量才会走 Cloudflare 中转
+    const SERVER_URL = "https://api.piggy-ledger.xyz"; // 也就是 API 域名，例如 https://xxx.api.lncldglobal.com
 
     // 1. 初始化 LeanCloud
     AV.init({
