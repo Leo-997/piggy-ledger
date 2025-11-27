@@ -974,7 +974,8 @@
         items.sort((a,b) => b.jsDate - a.jsDate).forEach(item => {
             const displayVal = getDisplayAmount(item.amount).toFixed(1);
             const sign = item.type === 'income' ? '+' : '-';
-            const color = item.type === 'income' ? 'var(--income-green)' : 'black';
+            // 🔥 修改这里：把 'black' 改成 'var(--text-main)'
+            const color = item.type === 'income' ? 'var(--income-green)' : 'var(--text-main)';
             list.innerHTML += `
                 <div class="swipe-container">
                     <div class="expense-card" onclick="openEditModal('${item.id}')">
