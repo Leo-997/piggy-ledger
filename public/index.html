@@ -1,401 +1,72 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>小猪账本 🧾</title>
-    <meta name="apple-mobile-web-app-title" content="小猪账本">
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <link rel="apple-touch-icon" href="unnamed.jpg">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <style>
-        /* --- 🎨 主题色恢复为小猪粉 --- */
-        :root { 
-            --primary: #FF8296; 
-            --primary-light: rgba(255, 130, 150, 0.15); 
-            --bg: #F2F2F7; 
-            --text-main: #000; 
-            --text-sub: #8E8E93; 
-            --delete-red: #FF3B30;
-            --income-green: #34C759; /* 收入用绿色区分，或者保持黑色，看你喜好 */
-        }
-        
-        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; background-color: var(--bg); margin: 0; padding: 0; overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
-        .app-container { max-width: 600px; margin: 0 auto; background: var(--bg); min-height: 100vh; padding-bottom: 90px; position: relative; overflow-x: hidden; }
-        
-        .header { padding: 20px 20px 10px 20px; background: var(--bg); display: flex; justify-content: space-between; align-items: flex-end; }
-        .header h1 { margin: 0; font-size: 34px; font-weight: 800; color: var(--text-main); }
-        .header-right { display: flex; gap: 10px; align-items: center; }
-        .badge { font-size: 12px; color: var(--text-sub); background: rgba(0,0,0,0.05); padding: 6px 10px; border-radius: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer; transition: all 0.2s; }
-        .badge:active { background: rgba(0,0,0,0.1); }
-        .badge-primary { background: var(--primary); color: white; font-weight: bold; box-shadow: 0 2px 5px rgba(255, 130, 150, 0.3); }
-
-        #auth-view { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background: white; padding: 30px; box-sizing: border-box; }
-        input { width: 100%; padding: 16px; margin: 8px 0; border: 1px solid #E5E5EA; border-radius: 12px; font-size: 17px; background: #F2F2F7; box-sizing: border-box; outline: none; }
-        .btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 14px; font-size: 17px; font-weight: 600; margin-top: 15px; cursor: pointer; }
-        .btn-outline { background: transparent; color: var(--primary); border: 1px solid var(--primary); margin-top: 10px; }
-        
-        /* --- 列表样式升级 (按天分组) --- */
-        .list-group { padding: 0 16px; margin-top: 10px; }
-        
-        .day-header {
-            display: flex; justify-content: space-between; align-items: flex-end;
-            padding: 15px 5px 5px 5px; color: var(--text-sub); font-size: 13px;
-        }
-        .day-total { font-size: 12px; }
-
-        /* 左滑容器 */
-        .swipe-container { position: relative; margin-bottom: 1px; background: white; overflow: hidden; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -ms-overflow-style: none; scrollbar-width: none; }
-        .swipe-container::-webkit-scrollbar { display: none; }
-        
-        /* 圆角处理：每天的第一条和最后一条有圆角 */
-        .day-block .swipe-container:first-of-type { border-top-left-radius: 14px; border-top-right-radius: 14px; }
-        .day-block .swipe-container:last-of-type { border-bottom-left-radius: 14px; border-bottom-right-radius: 14px; margin-bottom: 10px; }
-        .day-block .swipe-container:only-of-type { border-radius: 14px; margin-bottom: 10px; }
-
-        .expense-card { min-width: 100%; background: white; padding: 16px; display: flex; align-items: center; box-sizing: border-box; scroll-snap-align: start; transition: background 0.2s; border-bottom: 1px solid #f5f5f5; }
-        .expense-card:active { background: #f9f9f9; }
-        
-        .delete-action { min-width: 80px; background: var(--delete-red); color: white; display: flex; justify-content: center; align-items: center; font-weight: bold; scroll-snap-align: end; cursor: pointer; }
-
-        .icon-box { width: 44px; height: 44px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 20px; margin-right: 14px; }
-        .card-info { flex: 1; overflow: hidden; }
-        .card-cat { font-size: 17px; font-weight: 600; margin-bottom: 2px; }
-        .card-date { font-size: 13px; color: var(--text-sub); }
-        .card-amount { font-size: 18px; font-weight: 700; color: var(--text-main); }
-        
-        /* 收入显示绿色 (可选) */
-        .amount-income { color: var(--income-green); } 
-
+<!DOCTYPE html><html lang="zh-CN"><head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">    <title>小猪账本 🧾</title>    <meta name="apple-mobile-web-app-title" content="小猪账本">        <meta name="apple-mobile-web-app-capable" content="yes">        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">        <link rel="apple-touch-icon" href="unnamed.jpg">    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>        /* --- 🎨 主题色恢复为小猪粉 --- */        :root {             --primary: #FF8296;             --primary-light: rgba(255, 130, 150, 0.15);             --bg: #F2F2F7;             --text-main: #000;             --text-sub: #8E8E93;             --delete-red: #FF3B30;            --income-green: #34C759;        }                body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; background-color: var(--bg); margin: 0; padding: 0; overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }        .app-container { max-width: 600px; margin: 0 auto; background: var(--bg); min-height: 100vh; padding-bottom: 90px; position: relative; overflow-x: hidden; }                .header { padding: 20px 20px 10px 20px; background: var(--bg); display: flex; justify-content: space-between; align-items: flex-end; }        .header h1 { margin: 0; font-size: 34px; font-weight: 800; color: var(--text-main); }        .header-right { display: flex; gap: 10px; align-items: center; }        .badge { font-size: 12px; color: var(--text-sub); background: rgba(0,0,0,0.05); padding: 6px 10px; border-radius: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer; transition: all 0.2s; }        .badge:active { background: rgba(0,0,0,0.1); }        .badge-primary { background: var(--primary); color: white; font-weight: bold; box-shadow: 0 2px 5px rgba(255, 130, 150, 0.3); }
+        #auth-view { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background: white; padding: 30px; box-sizing: border-box; }        input { width: 100%; padding: 16px; margin: 8px 0; border: 1px solid #E5E5EA; border-radius: 12px; font-size: 17px; background: #F2F2F7; box-sizing: border-box; outline: none; }        .btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 14px; font-size: 17px; font-weight: 600; margin-top: 15px; cursor: pointer; }        .btn-outline { background: transparent; color: var(--primary); border: 1px solid var(--primary); margin-top: 10px; }                /* --- 列表样式 --- */        .list-group { padding: 0 16px; margin-top: 10px; }                .day-header {            display: flex; justify-content: space-between; align-items: flex-end;            padding: 15px 5px 5px 5px; color: var(--text-sub); font-size: 13px;        }        .day-total { font-size: 12px; }
+        .swipe-container { position: relative; margin-bottom: 1px; background: white; overflow: hidden; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -ms-overflow-style: none; scrollbar-width: none; }        .swipe-container::-webkit-scrollbar { display: none; }                .day-block .swipe-container:first-of-type { border-top-left-radius: 14px; border-top-right-radius: 14px; }        .day-block .swipe-container:last-of-type { border-bottom-left-radius: 14px; border-bottom-right-radius: 14px; margin-bottom: 10px; }        .day-block .swipe-container:only-of-type { border-radius: 14px; margin-bottom: 10px; }
+        .expense-card { min-width: 100%; background: white; padding: 16px; display: flex; align-items: center; box-sizing: border-box; scroll-snap-align: start; transition: background 0.2s; border-bottom: 1px solid #f5f5f5; }        .expense-card:active { background: #f9f9f9; }                .delete-action { min-width: 80px; background: var(--delete-red); color: white; display: flex; justify-content: center; align-items: center; font-weight: bold; scroll-snap-align: end; cursor: pointer; }
+        .icon-box { width: 44px; height: 44px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 20px; margin-right: 14px; }        .card-info { flex: 1; overflow: hidden; }        .card-cat { font-size: 17px; font-weight: 600; margin-bottom: 2px; }        .card-date { font-size: 13px; color: var(--text-sub); }        .card-amount { font-size: 18px; font-weight: 700; color: var(--text-main); }        .amount-income { color: var(--income-green); } 
         .fab-btn { position: fixed; bottom: 100px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: white; font-size: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(255, 130, 150, 0.4); cursor: pointer; z-index: 90; }
+        /* 弹窗 */        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 100; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }        .modal-content { background: white; width: 85%; max-width: 400px; border-radius: 20px; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); display:flex; flex-direction: column; }        @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }                .type-toggle { display: flex; background: #eee; padding: 4px; border-radius: 10px; margin-bottom: 20px; }        .type-option { flex: 1; text-align: center; padding: 8px; font-size: 14px; color: #666; border-radius: 8px; cursor: pointer; }        .type-option.active { background: white; color: black; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        select { width: 100%; padding: 16px; margin: 8px 0; border: 1px solid #E5E5EA; border-radius: 12px; font-size: 17px; background: #F2F2F7; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='gray' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; }        .input-group { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }        .input-group select { width: 80px; margin: 0; }        .rate-input-box { background: #FFF8E1; border: 1px solid #FFD54F; color: #FF8F00; padding: 10px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; font-size: 14px; }        .rate-input-box input { margin: 0; width: 60px; padding: 5px; height: auto; background: white; border: 1px solid #FFD54F; }
+        /* 统计页 */        .stats-control { padding: 10px 20px; background: white; margin-bottom: 10px; }        .stats-header-toggle { display: flex; justify-content: center; margin-bottom: 15px; }        .stats-type-btn { padding: 6px 16px; border: 1px solid var(--primary); color: var(--primary); font-size: 13px; cursor: pointer; }        .stats-type-btn:first-child { border-radius: 6px 0 0 6px; border-right: none; }        .stats-type-btn:last-child { border-radius: 0 6px 6px 0; }        .stats-type-btn.active { background: var(--primary); color: white; }
+        .segment-control { display: flex; background: #E5E5EA; border-radius: 8px; padding: 2px; width: 100%; }        .segment-btn { flex: 1; text-align: center; padding: 6px; border-radius: 6px; font-size: 13px; color: #666; cursor: pointer; }        .segment-btn.active { background: white; color: black; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }                .date-nav { display: flex; justify-content: center; align-items: center; padding-top: 10px; gap: 20px;}        .nav-arrow { color: var(--primary); font-size: 20px; cursor: pointer; padding: 5px; }        .current-date-range { font-size: 15px; font-weight: bold; font-family: monospace; }
+        .chart-container { background: white; margin: 16px; padding: 20px; border-radius: 14px; }        .progress-bg { height: 6px; background: #f0f0f0; border-radius: 3px; margin-top: 5px; overflow: hidden; }        .progress-fill { height: 100%; background: var(--primary); border-radius: 3px; }        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 80px; background: white; display: flex; justify-content: space-around; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.05); z-index: 80; }        .tab-item { text-align: center; color: #C7C7CC; width: 50%; cursor: pointer; }        .tab-item i { font-size: 24px; margin-bottom: 4px; display: block; }        .tab-item span { font-size: 10px; font-weight: 500; }        .tab-item.active { color: var(--primary); }        .hidden { display: none !important; }
+        /* 类别选择网格 */        .category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 15px; margin-bottom: 20px; }        .cat-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; opacity: 0.6; transition: all 0.2s; }        .cat-item.active { opacity: 1; transform: scale(1.1); }        .cat-icon-circle { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; margin-bottom: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }        .cat-name { font-size: 12px; color: #666; }                /* 主题选择器 */        .theme-selector { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;}        .theme-dot { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); position: relative; }        .theme-dot.active::after { content: '✔'; color: white; position: absolute; left: 8px; top: 4px; font-size: 14px; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        /* 🌓 暗色模式深度修复补丁 */        body.dark-mode { background: #000; color: white; }        body.dark-mode .expense-card, body.dark-mode .modal-content, body.dark-mode .header { background: #1C1C1E; color: white; }        body.dark-mode input, body.dark-mode select { background: #2C2C2E; border-color: #3A3A3C; color: white; }        body.dark-mode .chart-container, body.dark-mode .stats-control, body.dark-mode .tab-bar, body.dark-mode .swipe-container { background-color: #1C1C1E !important; border-color: #2C2C2E; }        body.dark-mode .segment-control, body.dark-mode .type-toggle { background-color: #2C2C2E; }        body.dark-mode .segment-btn.active, body.dark-mode .type-option.active { background-color: #48484A; color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.5); }        body.dark-mode .cat-name, body.dark-mode .card-date, body.dark-mode .day-header { color: #98989D; }        body.dark-mode #total-spending, body.dark-mode #symbol-total { color: white; }        body.dark-mode .rate-input-box { background-color: #2C2C2E; border-color: #48484A; color: #FFD60A; }        body.dark-mode .rate-input-box input { background-color: #3A3A3C !important; border-color: #48484A; color: white; }        body.dark-mode select { background-color: #2C2C2E; color: white; border-color: #3A3A3C; }        body.dark-mode .tab-bar { border-top: 1px solid #2C2C2E; }        body.dark-mode #inp-currency { background-color: #2C2C2E !important; color: white !important; border-color: #3A3A3C !important; }        body.dark-mode #inp-currency option { background-color: #1C1C1E; color: white; }    </style></head><body>
+<div id="auth-view">    <h1 style="color: var(--primary); margin-bottom: 40px;">小猪账本 🧾</h1>    <input type="email" id="email" placeholder="电子邮箱">    <input type="password" id="password" placeholder="密码 (至少6位)">    <button class="btn" onclick="handleAuth('login')">登录</button>    <button class="btn btn-outline" onclick="handleAuth('register')">注册新账号</button>    <p id="auth-msg" style="color: red; margin-top: 15px; font-size: 14px;"></p></div>
+<div id="app-view" class="app-container hidden">    <div class="header">        <h1 id="page-title">账本</h1>        <div class="header-right">            <div class="badge" onclick="toggleThemeModal()">                <i class="fa-solid fa-shirt"></i>            </div>                        <div class="badge badge-primary" onclick="toggleGlobalCurrency()">                <i class="fa-solid fa-coins"></i> <span id="currency-display">$ 澳元</span>            </div>            <div class="badge" onclick="logout()">                <i class="fa-solid fa-user"></i> <span id="user-display">User</span>            </div>        </div>    </div>
+    <div id="home-tab">        <div class="list-group" id="expense-list"></div>        <div class="fab-btn" onclick="openEditModal(null)"><i class="fa-solid fa-plus"></i></div>    </div>
+    <div id="stats-tab" class="hidden">        <div class="stats-control">            <div class="stats-header-toggle">                <div class="stats-type-btn active" id="st-expense" onclick="setStatsType('expense')">支出</div>                <div class="stats-type-btn" id="st-income" onclick="setStatsType('income')">收入</div>            </div>            <div class="segment-control">                <div class="segment-btn active" onclick="setStatsMode('week')" id="seg-week">周</div>                <div class="segment-btn" onclick="setStatsMode('month')" id="seg-month">月</div>            </div>            <div class="date-nav">                <i class="fa-solid fa-circle-chevron-left nav-arrow" onclick="changeStatsDate(-1)"></i>                <div class="current-date-range" id="stats-range-text">...</div>                <i class="fa-solid fa-circle-chevron-right nav-arrow" onclick="changeStatsDate(1)"></i>            </div>        </div>        <div class="chart-container">            <h3 id="chart-title" style="margin-top: 0; color:var(--primary);">趋势图</h3>            <div style="height: 250px; position: relative; width: 100%;">                <canvas id="myChart"></canvas>            </div>        </div>        <div class="chart-container">            <div style="display:flex; justify-content:space-between; align-items:baseline;">                <h3 style="margin: 0; color: #8E8E93; font-size: 14px;">总计</h3>                <div style="font-size: 24px; font-weight: 800; color: var(--text-main);">                    <span id="symbol-total">$</span><span id="total-spending">0.00</span>                </div>            </div>            <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">            <div id="category-ranks"></div>        </div>    </div>
+    <div id="detail-tab" class="hidden">        <div style="padding: 0 16px;">            <div style="margin-bottom: 20px; color: var(--primary); cursor: pointer;" onclick="closeDetail()">                <i class="fa-solid fa-arrow-left"></i> 返回统计            </div>            <h2 id="detail-title" style="margin-bottom: 20px;">分类详情</h2>            <div id="detail-list"></div>        </div>    </div>
+    <div id="add-modal" class="modal-overlay hidden" onclick="if(event.target === this) toggleModal(false)">        <div class="modal-content">            <h2 id="modal-title" style="text-align: center; margin-top: 0; margin-bottom: 15px;">记一笔</h2>            <div class="type-toggle">                <div class="type-option active" id="type-expense" onclick="setModalType('expense')">支出</div>                <div class="type-option" id="type-income" onclick="setModalType('income')">收入</div>            </div>            <input type="hidden" id="inp-id">                        <div class="input-group" style="margin-bottom: 0;">                <span id="modal-symbol" style="font-size: 24px; color: var(--primary); width: 20px;">$</span>                <input type="number" id="inp-amount" placeholder="0.00"                     style="font-size: 36px; border: none; flex:1; background: transparent; color: var(--primary); font-weight: bold; padding: 0;">                <select id="inp-currency" onchange="onCurrencyChange()" style="background: #fff; border: 1px solid #ddd;">                    <option value="AUD">AUD</option>                    <option value="CNY">CNY</option>                </select>            </div>            <div id="rate-container" class="rate-input-box hidden">                <i class="fa-solid fa-arrow-right-arrow-left"></i>                <span>当前汇率</span>                <input type="number" id="inp-rate" step="0.01" style="background:#eee; color:#555;">            </div>            <input type="hidden" id="inp-category" value="">            <div id="category-grid-container" class="category-grid"></div>            <input type="date" id="inp-date">            <input type="text" id="inp-note" placeholder="备注 (可选)">            <button class="btn" onclick="saveExpense()">保存</button>            <button class="btn btn-outline" onclick="deleteCurrent()" id="btn-delete" style="color:red; border-color:red; display:none;">删除此记录</button>            <button class="btn btn-outline" onclick="toggleModal(false)" style="margin-top: 5px; color: #999; border:none;">取消</button>        </div>    </div>
+    <div id="theme-modal" class="modal-overlay hidden" onclick="if(event.target === this) toggleThemeModal()">        <div class="modal-content" style="max-width: 300px;">            <h3 style="text-align:center; margin-top:0;">选择主题风格</h3>            <div class="theme-selector" id="theme-list"></div>            <button class="btn btn-outline" onclick="toggleThemeModal()">关闭</button>        </div>    </div>
+    <div class="tab-bar" id="main-tab-bar">        <div class="tab-item active" onclick="switchTab('home')">            <i class="fa-solid fa-list-ul"></i><span>明细</span>        </div>        <div class="tab-item" onclick="switchTab('stats')">            <i class="fa-solid fa-chart-simple"></i><span>统计</span>        </div>    </div></div>
 
-        /* 弹窗 */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 100; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-content { background: white; width: 85%; max-width: 400px; border-radius: 20px; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); display:flex; flex-direction: column; }
-        @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        
-        /* 类型切换条 */
-        .type-toggle { display: flex; background: #eee; padding: 4px; border-radius: 10px; margin-bottom: 20px; }
-        .type-option { flex: 1; text-align: center; padding: 8px; font-size: 14px; color: #666; border-radius: 8px; cursor: pointer; }
-        .type-option.active { background: white; color: black; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-
-        select { width: 100%; padding: 16px; margin: 8px 0; border: 1px solid #E5E5EA; border-radius: 12px; font-size: 17px; background: #F2F2F7; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='gray' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; }
-        .input-group { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
-        .input-group select { width: 80px; margin: 0; }
-        .rate-input-box { background: #FFF8E1; border: 1px solid #FFD54F; color: #FF8F00; padding: 10px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; font-size: 14px; }
-        .rate-input-box input { margin: 0; width: 60px; padding: 5px; height: auto; background: white; border: 1px solid #FFD54F; }
-
-        /* 统计页 */
-        .stats-control { padding: 10px 20px; background: white; margin-bottom: 10px; }
-        .stats-header-toggle { display: flex; justify-content: center; margin-bottom: 15px; }
-        .stats-type-btn { padding: 6px 16px; border: 1px solid var(--primary); color: var(--primary); font-size: 13px; cursor: pointer; }
-        .stats-type-btn:first-child { border-radius: 6px 0 0 6px; border-right: none; }
-        .stats-type-btn:last-child { border-radius: 0 6px 6px 0; }
-        .stats-type-btn.active { background: var(--primary); color: white; }
-
-        .segment-control { display: flex; background: #E5E5EA; border-radius: 8px; padding: 2px; width: 100%; }
-        .segment-btn { flex: 1; text-align: center; padding: 6px; border-radius: 6px; font-size: 13px; color: #666; cursor: pointer; }
-        .segment-btn.active { background: white; color: black; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        
-        .date-nav { display: flex; justify-content: center; align-items: center; padding-top: 10px; gap: 20px;}
-        .nav-arrow { color: var(--primary); font-size: 20px; cursor: pointer; padding: 5px; }
-        .current-date-range { font-size: 15px; font-weight: bold; font-family: monospace; }
-
-        .chart-container { background: white; margin: 16px; padding: 20px; border-radius: 14px; }
-        .progress-bg { height: 6px; background: #f0f0f0; border-radius: 3px; margin-top: 5px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--primary); border-radius: 3px; }
-        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 80px; background: white; display: flex; justify-content: space-around; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.05); z-index: 80; }
-        .tab-item { text-align: center; color: #C7C7CC; width: 50%; cursor: pointer; }
-        .tab-item i { font-size: 24px; margin-bottom: 4px; display: block; }
-        .tab-item span { font-size: 10px; font-weight: 500; }
-        .tab-item.active { color: var(--primary); }
-        .hidden { display: none !important; }
-
-        /* --- 🎨 新增：类别选择网格 --- */
-        .category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 15px; margin-bottom: 20px; }
-        .cat-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; opacity: 0.6; transition: all 0.2s; }
-        .cat-item.active { opacity: 1; transform: scale(1.1); }
-        .cat-icon-circle { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; margin-bottom: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .cat-name { font-size: 12px; color: #666; }
-        
-        /* --- 👕 新增：主题选择器 --- */
-        .theme-selector { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;}
-        .theme-dot { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); position: relative; }
-        .theme-dot.active::after { content: '✔'; color: white; position: absolute; left: 8px; top: 4px; font-size: 14px; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-
-        /* 暗色模式特殊适配 (可选) */
-        body.dark-mode { background: #000; color: white; }
-        body.dark-mode .expense-card, body.dark-mode .modal-content, body.dark-mode .header { background: #1C1C1E; color: white; }
-        body.dark-mode input, body.dark-mode select { background: #2C2C2E; border-color: #3A3A3C; color: white; }
-
-        /* =========================================
-           🌓 暗色模式深度修复补丁 (Dark Mode Fixes)
-           把这段代码放在 CSS 的最后面
-           ========================================= */
-        
-        /* 1. 修复统计页：白色容器变深色 */
-        body.dark-mode .chart-container,
-        body.dark-mode .stats-control,
-        body.dark-mode .tab-bar,
-        body.dark-mode .swipe-container,
-        body.dark-mode .expense-card {
-            background-color: #1C1C1E !important; /* 深灰色背景 */
-            border-color: #2C2C2E;
-        }
-
-        /* 2. 修复切换条 (支出/收入，周/月) 的背景 */
-        body.dark-mode .segment-control,
-        body.dark-mode .type-toggle {
-            background-color: #2C2C2E;
-        }
-        
-        /* 3. 修复切换按钮被选中时的样式 */
-        body.dark-mode .segment-btn.active,
-        body.dark-mode .type-option.active {
-            background-color: #48484A; /* 比背景稍亮一点 */
-            color: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
-        }
-
-        /* 4. 修复文字颜色 (副标题变浅灰，防止太刺眼) */
-        body.dark-mode .cat-name,
-        body.dark-mode .card-date,
-        body.dark-mode .day-header {
-            color: #98989D;
-        }
-
-        /* 5. 修复总金额颜色 */
-        body.dark-mode #total-spending,
-        body.dark-mode #symbol-total {
-            color: white;
-        }
-
-        /* 6. 修复汇率输入框 (原来是浅黄色背景，暗色模式下太亮) */
-        body.dark-mode .rate-input-box {
-            background-color: #2C2C2E;
-            border-color: #48484A;
-            color: #FFD60A; /* 黄色文字 */
-        }
-        body.dark-mode .rate-input-box input {
-            background-color: #3A3A3C !important;
-            border-color: #48484A;
-            color: white;
-        }
-
-        /* 7. 修复币种选择下拉框 */
-        body.dark-mode select {
-            background-color: #2C2C2E;
-            color: white;
-            border-color: #3A3A3C;
-        }
-        
-        /* 8. 修复底部导航栏的分割线 */
-        body.dark-mode .tab-bar {
-            border-top: 1px solid #2C2C2E;
-        }
-        
-        /* ============== 🔧 终极修复：币种选择框 ============== */
-        /* 这里的 !important 是为了覆盖 HTML 里写死的 style="background: #fff" */
-        body.dark-mode #inp-currency {
-            background-color: #2C2C2E !important;
-            color: white !important;
-            border-color: #3A3A3C !important;
-        }
-        
-        /* 修复选项在某些浏览器里的背景 */
-        body.dark-mode #inp-currency option {
-            background-color: #1C1C1E;
-            color: white;
-        }
-    </style>
-</head>
-<body>
-
-<div id="auth-view">
-    <h1 style="color: var(--primary); margin-bottom: 40px;">小猪账本 🧾</h1>
-    <input type="email" id="email" placeholder="电子邮箱">
-    <input type="password" id="password" placeholder="密码 (至少6位)">
-    <button class="btn" onclick="handleAuth('login')">登录</button>
-    <button class="btn btn-outline" onclick="handleAuth('register')">注册新账号</button>
-    <p id="auth-msg" style="color: red; margin-top: 15px; font-size: 14px;"></p>
-</div>
-
-<div id="app-view" class="app-container hidden">
-    <div class="header">
-        <h1 id="page-title">账本</h1>
-        <div class="header-right">
-            <div class="badge" onclick="toggleThemeModal()">
-                <i class="fa-solid fa-shirt"></i>
-            </div>
-            
-            <div class="badge badge-primary" onclick="toggleGlobalCurrency()">
-                <i class="fa-solid fa-coins"></i> <span id="currency-display">$ 澳元</span>
-            </div>
-            <div class="badge" onclick="logout()">
-                <i class="fa-solid fa-user"></i> <span id="user-display">User</span>
-            </div>
-        </div>
-    </div>
-
-    <div id="home-tab">
-        <div class="list-group" id="expense-list"></div>
-        <div class="fab-btn" onclick="openEditModal(null)"><i class="fa-solid fa-plus"></i></div>
-    </div>
-
-    <div id="stats-tab" class="hidden">
-        <div class="stats-control">
-            <div class="stats-header-toggle">
-                <div class="stats-type-btn active" id="st-expense" onclick="setStatsType('expense')">支出</div>
-                <div class="stats-type-btn" id="st-income" onclick="setStatsType('income')">收入</div>
-            </div>
-
-            <div class="segment-control">
-                <div class="segment-btn active" onclick="setStatsMode('week')" id="seg-week">周</div>
-                <div class="segment-btn" onclick="setStatsMode('month')" id="seg-month">月</div>
-            </div>
-            <div class="date-nav">
-                <i class="fa-solid fa-circle-chevron-left nav-arrow" onclick="changeStatsDate(-1)"></i>
-                <div class="current-date-range" id="stats-range-text">...</div>
-                <i class="fa-solid fa-circle-chevron-right nav-arrow" onclick="changeStatsDate(1)"></i>
-            </div>
-        </div>
-
-        <div class="chart-container">
-            <h3 id="chart-title" style="margin-top: 0; color:var(--primary);">趋势图</h3>
-            <div style="height: 250px; position: relative; width: 100%;">
-                <canvas id="myChart"></canvas>
-            </div>
-        </div>
-
-        <div class="chart-container">
-            <div style="display:flex; justify-content:space-between; align-items:baseline;">
-                <h3 style="margin: 0; color: #8E8E93; font-size: 14px;">总计</h3>
-                <div style="font-size: 24px; font-weight: 800; color: var(--text-main);">
-                    <span id="symbol-total">$</span><span id="total-spending">0.00</span>
-                </div>
-            </div>
-            <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
-            <div id="category-ranks"></div>
-        </div>
-    </div>
-
-    <div id="detail-tab" class="hidden">
-        <div style="padding: 0 16px;">
-            <div style="margin-bottom: 20px; color: var(--primary); cursor: pointer;" onclick="closeDetail()">
-                <i class="fa-solid fa-arrow-left"></i> 返回统计
-            </div>
-            <h2 id="detail-title" style="margin-bottom: 20px;">分类详情</h2>
-            <div id="detail-list"></div>
-        </div>
-    </div>
-
-    <div id="add-modal" class="modal-overlay hidden" onclick="if(event.target === this) toggleModal(false)">
-        <div class="modal-content">
-            <h2 id="modal-title" style="text-align: center; margin-top: 0; margin-bottom: 15px;">记一笔</h2>
-            <div class="type-toggle">
-                <div class="type-option active" id="type-expense" onclick="setModalType('expense')">支出</div>
-                <div class="type-option" id="type-income" onclick="setModalType('income')">收入</div>
-            </div>
-
-            <input type="hidden" id="inp-id">
-            
-            <div class="input-group" style="margin-bottom: 0;">
-                <span id="modal-symbol" style="font-size: 24px; color: var(--primary); width: 20px;">$</span>
-                <input type="number" id="inp-amount" placeholder="0.00" 
-                    style="font-size: 36px; border: none; flex:1; background: transparent; color: var(--primary); font-weight: bold; padding: 0;">
-                <select id="inp-currency" onchange="onCurrencyChange()" style="background: #fff; border: 1px solid #ddd;">
-                    <option value="AUD">AUD</option>
-                    <option value="CNY">CNY</option>
-                </select>
-            </div>
-
-            <div id="rate-container" class="rate-input-box hidden">
-                <i class="fa-solid fa-arrow-right-arrow-left"></i>
-                <span>当前汇率</span>
-                <input type="number" id="inp-rate" step="0.01" style="background:#eee; color:#555;">
-            </div>
-
-            <input type="hidden" id="inp-category" value="">
-            <div id="category-grid-container" class="category-grid">
-                </div>
-
-            <input type="date" id="inp-date">
-            <input type="text" id="inp-note" placeholder="备注 (可选)">
-
-            <button class="btn" onclick="saveExpense()">保存</button>
-            <button class="btn btn-outline" onclick="deleteCurrent()" id="btn-delete" style="color:red; border-color:red; display:none;">删除此记录</button>
-            <button class="btn btn-outline" onclick="toggleModal(false)" style="margin-top: 5px; color: #999; border:none;">取消</button>
-        </div>
-    </div>
-
-    <div id="theme-modal" class="modal-overlay hidden" onclick="if(event.target === this) toggleThemeModal()">
-        <div class="modal-content" style="max-width: 300px;">
-            <h3 style="text-align:center; margin-top:0;">选择主题风格</h3>
-            <div class="theme-selector" id="theme-list">
-                </div>
-            <button class="btn btn-outline" onclick="toggleThemeModal()">关闭</button>
-        </div>
-    </div>
-
-    <div class="tab-bar" id="main-tab-bar">
-        <div class="tab-item active" onclick="switchTab('home')">
-            <i class="fa-solid fa-list-ul"></i><span>明细</span>
-        </div>
-        <div class="tab-item" onclick="switchTab('stats')">
-            <i class="fa-solid fa-chart-simple"></i><span>统计</span>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.15.0/dist/av-min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
 <script>
-    // 🔥🔥🔥 请在这里填入你第一步获取的内容 🔥🔥🔥
-    const APP_ID = "rVNwzu3Ejg8LXr4xXjTpc1TQ-MdYXbMMI";
-    const APP_KEY = "a4lJshh9aKe6YSuXWgOODdpJ";
-    // ✅ 必须改成这个，流量才会走 Cloudflare 中转
-    const SERVER_URL = "https://api.piggy-ledger.xyz"; // 也就是 API 域名，例如 https://xxx.api.lncldglobal.com
+    // 🔥🔥🔥 【重要】请在此处填入你在 Firebase 控制台获得的配置参数 🔥🔥🔥
+    const firebaseConfig = {
+        apiKey: "AIzaSyC4jLaY9IBxmfc9sAYBjyi0lyqeGrMB77s",
+        authDomain: "the-piggy-web.firebaseapp.com",
+        projectId: "the-piggy-web",
+        storageBucket: "the-piggy-web.firebasestorage.app",
+        messagingSenderId: "386306769214",
+        appId: "1:386306769214:web:69b17906f73a24df076c6f",
+        measurementId: "G-MBF4050RTG"
+    };
 
-    // 1. 初始化 LeanCloud
-    AV.init({
-        appId: APP_ID,
-        appKey: APP_KEY,
-        serverURLs: SERVER_URL
-    });
+    // 初始化 Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-    // 🎨 升级版类别配置：包含图标和颜色
     const categoryConfig = {
         expense: [
-            { name: "餐饮", icon: "fa-utensils", color: "#FF9500" }, // 橙色
-            { name: "交通", icon: "fa-car", color: "#007AFF" },      // 蓝色
-            { name: "购物", icon: "fa-bag-shopping", color: "#FF2D55" }, // 红色
-            { name: "娱乐", icon: "fa-gamepad", color: "#AF52DE" },  // 紫色
-            { name: "居住", icon: "fa-house", color: "#5856D6" },    // 深紫
-            { name: "医疗", icon: "fa-briefcase-medical", color: "#FF3B30" }, // 鲜红
-            { name: "其他", icon: "fa-box-open", color: "#8E8E93" }  // 灰色
+            { name: "餐饮", icon: "fa-utensils", color: "#FF9500" },
+            { name: "交通", icon: "fa-car", color: "#007AFF" },
+            { name: "购物", icon: "fa-bag-shopping", color: "#FF2D55" },
+            { name: "娱乐", icon: "fa-gamepad", color: "#AF52DE" },
+            { name: "居住", icon: "fa-house", color: "#5856D6" },
+            { name: "医疗", icon: "fa-briefcase-medical", color: "#FF3B30" },
+            { name: "其他", icon: "fa-box-open", color: "#8E8E93" }
         ],
         income: [
-            { name: "工资", icon: "fa-money-bill-wave", color: "#34C759" }, // 绿色
-            { name: "兼职", icon: "fa-briefcase", color: "#30B0C7" },     // 青色
-            { name: "理财", icon: "fa-chart-line", color: "#FF9500" },    // 橙色
-            { name: "礼金", icon: "fa-gift", color: "#FF2D55" },          // 红色
-            { name: "其他", icon: "fa-circle-plus", color: "#8E8E93" }    // 灰色
+            { name: "工资", icon: "fa-money-bill-wave", color: "#34C759" },
+            { name: "兼职", icon: "fa-briefcase", color: "#30B0C7" },
+            { name: "理财", icon: "fa-chart-line", color: "#FF9500" },
+            { name: "礼金", icon: "fa-gift", color: "#FF2D55" },
+            { name: "其他", icon: "fa-circle-plus", color: "#8E8E93" }
         ]
     };
-    
-    // 主题配色方案
+
     const themes = {
         pink:   { primary: "#FF8296", bg: "#F2F2F7", name: "小猪粉" },
         blue:   { primary: "#007AFF", bg: "#F0F8FF", name: "天空蓝" },
         green:  { primary: "#34C759", bg: "#F0FFF4", name: "薄荷绿" },
         purple: { primary: "#AF52DE", bg: "#F3F0FF", name: "薰衣草" },
-        dark:   { primary: "#FFD60A", bg: "#6e6e7d", name: "暗灰色" } // 暗色模式尝鲜
+        dark:   { primary: "#FFD60A", bg: "#6e6e7d", name: "暗灰色" }
     };
 
     let currentUser = null;
@@ -408,23 +79,17 @@
     let globalRate = 4.7;
     let currentModalType = 'expense';
 
-    // --- 🎨 1. 渲染类别网格 (替代原来的下拉框) ---
     function renderCategoryGrid(type) {
         const container = document.getElementById('category-grid-container');
         container.innerHTML = "";
         const list = categoryConfig[type];
-        
-        // 默认选中第一个
         if(!document.getElementById('inp-category').value) {
             selectCategory(list[0].name);
         }
-
         list.forEach(cat => {
             const isSelected = document.getElementById('inp-category').value === cat.name;
             const activeClass = isSelected ? 'active' : '';
-            // 如果选中，图标显示鲜艳颜色；未选中则稍淡
-            const bgColor = cat.color; 
-            
+            const bgColor = cat.color;                         
             container.innerHTML += `
                 <div class="cat-item ${activeClass}" onclick="selectCategory('${cat.name}')">
                     <div class="cat-icon-circle" style="background: ${bgColor};">
@@ -438,11 +103,9 @@
 
     window.selectCategory = (name) => {
         document.getElementById('inp-category').value = name;
-        // 重新渲染以更新选中状态 (虽然有点笨，但代码简单)
         renderCategoryGrid(currentModalType); 
     }
 
-    // --- 👕 2. 主题切换逻辑 ---
     window.toggleThemeModal = () => {
         const modal = document.getElementById('theme-modal');
         modal.classList.toggle('hidden');
@@ -462,17 +125,12 @@
         });
     }
 
-    // 🎨 修改后的设置主题函数
-    // 参数 shouldSave: 是否同步保存到云端 (默认 true)
     window.setTheme = (themeKey, shouldSave = true) => {
         const t = themes[themeKey];
         if(!t) return;
-        
         const root = document.documentElement;
         root.style.setProperty('--primary', t.primary);
-        root.style.setProperty('--primary-light', t.primary + '26'); 
-        
-        // 切换暗色/亮色模式
+        root.style.setProperty('--primary-light', t.primary + '26');                 
         if(themeKey === 'dark') {
             document.body.classList.add('dark-mode');
             root.style.setProperty('--bg', '#000');
@@ -482,87 +140,61 @@
             root.style.setProperty('--bg', t.bg);
             root.style.setProperty('--text-main', '#000');
         }
-
-        // 1. 本地缓存 (为了下次打开网页还没登录时能先显示)
         localStorage.setItem('piggy_theme', themeKey);
-        
-        // 2. 🔥 核心更新：如果用户已登录，且需要保存，则同步到云端数据库
         if (currentUser && shouldSave) {
-            currentUser.set('theme', themeKey); // 给用户对象设置 'theme' 字段
-            currentUser.save().catch(e => console.error("主题同步失败:", e));
+            db.collection('users').doc(currentUser.uid).set({ theme: themeKey }, { merge: true })
+              .catch(e => console.error("主题同步失败:", e));
         }
-
-        // 关闭弹窗
         const modal = document.getElementById('theme-modal');
-        if(!modal.classList.contains('hidden')) {
-            toggleThemeModal();
-        }
-        
-        // 更新一下弹窗里的选中状态
+        if(!modal.classList.contains('hidden')) { toggleThemeModal(); }
         renderThemeOptions();
     }
-    
-    // 初始化加载主题
+
     const savedTheme = localStorage.getItem('piggy_theme') || 'pink';
     setTheme(savedTheme);
 
-    
-
-    // --- 认证部分 ---
-
-    // 检查当前登录状态
-    const user = AV.User.current();
-    if (user) {
-        currentUser = user;
-        showApp();
-    } else {
-        showAuth();
-    }
+    // 🔐 Firebase 实时状态监听
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            currentUser = user;
+            showApp();
+        } else {
+            currentUser = null;
+            showAuth();
+        }
+    });
 
     window.handleAuth = async (type) => {
         const email = document.getElementById('email').value;
         const pwd = document.getElementById('password').value;
         const errorMsg = document.getElementById('auth-msg');
-        
         try {
             if(type === 'register') {
-                // LeanCloud 注册: 用户名, 密码, 邮箱
-                const user = new AV.User();
-                user.setUsername(email); //以此邮箱作为用户名
-                user.setPassword(pwd);
-                user.setEmail(email);
-                await user.signUp();
-                currentUser = user;
-                showApp();
+                await auth.createUserWithEmailAndPassword(email, pwd);
             } else {
-                // LeanCloud 登录
-                const user = await AV.User.logIn(email, pwd);
-                currentUser = user;
-                showApp();
+                await auth.signInWithEmailAndPassword(email, pwd);
             }
         } catch(e) {
-            errorMsg.innerText = "错误: " + (e.message || "登录失败，请检查账号密码");
+            errorMsg.innerText = "错误: " + (e.message || "认证失败，请检查账号密码");
         }
     }
 
     window.logout = async () => {
-        await AV.User.logOut();
-        currentUser = null;
-        showAuth();
+        await auth.signOut();
     }
 
-    function showApp() {
+    async function showApp() {
         document.getElementById('auth-view').classList.add('hidden');
         document.getElementById('app-view').classList.remove('hidden');
-        document.getElementById('user-display').innerText = currentUser.getUsername().split('@')[0];
+        document.getElementById('user-display').innerText = currentUser.email.split('@')[0];
         
-        // 🔥 新增：登录成功后，检查云端有没有存过主题
-        const cloudTheme = currentUser.get('theme'); 
-        if (cloudTheme && themes[cloudTheme]) {
-            // 如果云端有，就应用云端的主题
-            // 传入 false 表示“只变色，别再往云端存一次了”
-            setTheme(cloudTheme, false); 
-        }
+        // 从 Firestore 同步用户个人主题
+        try {
+            const userDoc = await db.collection('users').doc(currentUser.uid).get();
+            if (userDoc.exists && userDoc.data().theme) {
+                setTheme(userDoc.data().theme, false);
+            }
+        } catch(e) { console.error("云端主题获取失败", e); }
 
         loadExpenses(); 
         fetchExchangeRate();
@@ -573,66 +205,52 @@
         document.getElementById('app-view').classList.add('hidden');
     }
 
-    // --- 数据操作部分 (核心修改) ---
-    // --- 🌍 新增：自动获取汇率 ---
+    // 🌍 真正免费公共汇率 API (不再依赖旧后台)
     async function fetchExchangeRate() {
         try {
-            // 使用免费公开的 API 获取 AUD -> CNY 汇率
-            // ✅ 这里的 SERVER_URL 就是你在上面定义的 https://api.piggy-ledger.xyz
-            // 我们让他去访问 /rate 这个暗号
-            const response = await fetch(SERVER_URL + '/rate');
+            const response = await fetch('https://open.er-api.com/v6/latest/AUD');
             const data = await response.json();
             if (data && data.rates && data.rates.CNY) {
-                globalRate = data.rates.CNY; // 更新全局汇率
-                console.log("今日汇率已更新:", globalRate);
-                
-                // 如果页面上有汇率输入框，也顺便更新一下显示
+                globalRate = data.rates.CNY;
+                console.log("今日实时汇率已更新:", globalRate);
                 const rateInput = document.getElementById('inp-rate');
                 if(rateInput) rateInput.value = globalRate.toFixed(2);
             }
         } catch (e) {
             console.error("汇率获取失败，使用默认值 4.7", e);
-            // 获取失败时不做打扰，继续使用默认值
         }
     }
 
-    // 获取(刷新)数据
+    // 📊 从 Firestore 获取账单明细
     async function loadExpenses() {
         if (!currentUser) return;
-        
-        // 创建查询
-        const query = new AV.Query('Expenses');
-        query.equalTo('user', currentUser); // 只查自己的
-        query.descending('date'); // 按日期降序
-        query.limit(1000); // 限制一次获取1000条，够用了
-
         try {
-            const results = await query.find();
+            const snapshot = await db.collection('Expenses')
+                                    .where('uid', '==', currentUser.uid)
+                                    .orderBy('date', 'desc')
+                                    .get();
             allExpenses = [];
-            results.forEach(doc => {
-                // LeanCloud 的数据获取方式是 .get('字段名')
-                let item = {
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                allExpenses.push({
                     id: doc.id,
-                    amount: doc.get('amount'),
-                    category: doc.get('category'),
-                    note: doc.get('note'),
-                    type: doc.get('type') || 'expense',
-                    // LeanCloud 直接存的是 Date 对象，不需要转换
-                    jsDate: doc.get('date'),
-                    // 原始 Date 对象用于保存时的引用，如果需要的话
-                    date: doc.get('date') 
-                };
-                allExpenses.push(item);
+                    amount: data.amount,
+                    category: data.category,
+                    note: data.note,
+                    type: data.type || 'expense',
+                    jsDate: data.date ? data.date.toDate() : new Date(),
+                    date: data.date ? data.date.toDate() : new Date()
+                });
             });
             renderHomeList();
             updateStatsView();
         } catch (error) {
             console.error("获取数据失败:", error);
-            alert("数据同步失败，请检查网络");
+            alert("数据同步失败。如果是首次部署，请按控制台 Console 提示创建 Firebase 复合索引。");
         }
     }
 
-    // 保存数据
+    // 💾 Firebase 保存/修改账单
     window.saveExpense = async () => {
         const id = document.getElementById('inp-id').value;
         const amountInput = parseFloat(document.getElementById('inp-amount').value);
@@ -643,79 +261,56 @@
         const note = document.getElementById('inp-note').value;
 
         if(!amountInput || !dateStr) return alert("请输入完整信息");
-
         let amountToSave = (currency === 'CNY') ? (amountInput / rate) : amountInput;
 
         try {
-            // 创建或更新 LeanCloud 对象
-            // 'Expenses' 是数据库表名，会自动创建
-            const ExpenseClass = AV.Object.extend('Expenses');
-            let expense;
+            const payload = {
+                uid: currentUser.uid,
+                amount: amountToSave,
+                category: cat,
+                date: firebase.firestore.Timestamp.fromDate(new Date(dateStr)),
+                note: note,
+                type: currentModalType
+            };
 
             if (id) {
-                //如果是修改，创建一个指向该ID的对象
-                expense = AV.Object.createWithoutData('Expenses', id);
+                await db.collection('Expenses').doc(id).update(payload);
             } else {
-                //如果是新增
-                expense = new ExpenseClass();
-                expense.set('user', currentUser); // 绑定当前用户
-                // 只有新增时设置 ACL (权限控制: 仅自己可读写)
-                const acl = new AV.ACL();
-                acl.setPublicReadAccess(false);
-                acl.setWriteAccess(currentUser, true);
-                acl.setReadAccess(currentUser, true);
-                expense.setACL(acl);
+                await db.collection('Expenses').add(payload);
             }
-
-            expense.set('amount', amountToSave);
-            expense.set('category', cat);
-            expense.set('date', new Date(dateStr)); // 存入标准 JS Date
-            expense.set('note', note);
-            expense.set('type', currentModalType);
-
-            await expense.save();
-            
             toggleModal(false);
-            loadExpenses(); // 保存后手动刷新列表
+            loadExpenses(); 
         } catch(e) {
             alert("保存失败: " + e.message);
         }
     }
 
-    // 删除数据
+    // 🗑️ Firebase 删除账单
     window.deleteCurrent = async () => {
         const id = document.getElementById('inp-id').value;
         if(!id) return;
         if(confirm("确定删除这条记录吗？")) { 
-            const todo = AV.Object.createWithoutData('Expenses', id);
-            await todo.destroy();
+            await db.collection('Expenses').doc(id).delete();
             toggleModal(false);
-            loadExpenses(); // 删除后刷新
+            loadExpenses();
         }
     }
-    
     window.quickDelete = async (id) => {
         event.stopPropagation();
         if(confirm("确定删除这条记录吗？")) {
-            const todo = AV.Object.createWithoutData('Expenses', id);
-            await todo.destroy();
+            await db.collection('Expenses').doc(id).delete();
             loadExpenses(); 
         }
     }
 
-    // --- UI 逻辑 (基本保持不变) ---
-
+    // --- UI 渲染及交互核心逻辑保持不变 ---
     window.toggleGlobalCurrency = () => {
         if (globalCurrency === 'AUD') {
-            // 简化版：不再需要输入，直接确认
-            //toFixed(2)保留两位小数显示
             if(confirm(`当前实时汇率: 1 AUD ≈ ${globalRate.toFixed(2)} CNY\n确定切换到人民币显示吗？`)) {
                 globalCurrency = 'CNY';
             }
         } else {
-            if (confirm("是否切换回澳元 (AUD) 模式？")) {
-                globalCurrency = 'AUD';
-            }
+            if (confirm("是否切换回澳元 (AUD) 模式？")) { globalCurrency = 'AUD'; }
         }
         updateUIForCurrency();
     }
@@ -738,42 +333,28 @@
         const listEl = document.getElementById('expense-list');
         listEl.innerHTML = "";
         if(allExpenses.length === 0) { listEl.innerHTML = '<div style="text-align:center;color:#999;margin-top:50px;">暂无账单</div>'; return; }
-        
         const symbol = globalCurrency === 'AUD' ? '$' : '￥';
-        
-        // 按天分组
         const grouped = {};
         allExpenses.forEach(item => {
             const dayStr = item.jsDate.toLocaleDateString('zh-CN', {month:'numeric', day:'numeric', weekday:'short'});
             const sortKey = item.jsDate.toISOString().split('T')[0];
-            
             if(!grouped[sortKey]) grouped[sortKey] = { title: dayStr, items: [], income: 0, expense: 0 };
-            
             grouped[sortKey].items.push(item);
             if(item.type === 'income') grouped[sortKey].income += item.amount;
             else grouped[sortKey].expense += item.amount;
         });
 
-        // 渲染分组
         let lastMonth = null; 
-
         Object.keys(grouped).sort().reverse().forEach(key => {
             const [y, m] = key.split('-'); 
             const currentMonth = `${y}年${parseInt(m)}月`; 
-
             if (currentMonth !== lastMonth) {
-                listEl.innerHTML += `
-                    <div style="font-size: 22px; font-weight: 800; margin: 30px 10px 10px 5px; color: var(--text-main);">
-                        ${currentMonth}
-                    </div>
-                `;
+                listEl.innerHTML += `<div style="font-size: 22px; font-weight: 800; margin: 30px 10px 10px 5px; color: var(--text-main);">${currentMonth}</div>`;
                 lastMonth = currentMonth;
             }
-
             const day = grouped[key];
             const incDisplay = getDisplayAmount(day.income).toFixed(1);
             const expDisplay = getDisplayAmount(day.expense).toFixed(1);
-            
             const headerHtml = `
                 <div class="day-header">
                     <span>${day.title}</span>
@@ -781,9 +362,7 @@
                         ${day.income > 0 ? `收入: ${incDisplay} ` : ''}
                         ${day.expense > 0 ? `支出: ${expDisplay}` : ''}
                     </span>
-                </div>
-            `;
-            
+                </div>`;
             let cardsHtml = "";
             day.items.forEach(item => {
                 const icon = getCategoryIcon(item.category);
@@ -791,7 +370,6 @@
                 const isInc = item.type === 'income';
                 const amountClass = isInc ? 'amount-income' : '';
                 const sign = isInc ? '' : '-';
-
                 cardsHtml += `
                     <div class="swipe-container">
                         <div class="expense-card" onclick="openEditModal('${item.id}')">
@@ -802,24 +380,17 @@
                             </div>
                             <div class="card-amount ${amountClass}">${sign}${symbol}${displayAmount}</div>
                         </div>
-                        <div class="delete-action" onclick="quickDelete('${item.id}')">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </div>
-                    </div>
-                `;
+                        <div class="delete-action" onclick="quickDelete('${item.id}')"><i class="fa-solid fa-trash-can"></i></div>
+                    </div>`;
             });
-
             listEl.innerHTML += `<div class="day-block">${headerHtml}${cardsHtml}</div>`;
         });
     }
 
-    // 弹窗逻辑
     window.setModalType = (type) => {
         currentModalType = type;
         document.getElementById('type-expense').className = type === 'expense' ? 'type-option active' : 'type-option';
         document.getElementById('type-income').className = type === 'income' ? 'type-option active' : 'type-option';
-        
-        // 🔥 改动：不再填充select，而是渲染网格
         renderCategoryGrid(type);
     }
 
@@ -828,11 +399,9 @@
         const rateBox = document.getElementById('rate-container');
         const symbol = document.getElementById('modal-symbol');
         const rateInput = document.getElementById('inp-rate');
-
         if (cur === 'CNY') {
             rateBox.classList.remove('hidden');
             symbol.innerText = '￥';
-            // 切换到 CNY 时，自动填入当前获取到的最新汇率
             rateInput.value = globalRate.toFixed(2);
         } else {
             rateBox.classList.add('hidden');
@@ -843,7 +412,6 @@
     window.openEditModal = (id) => {
         const title = document.getElementById('modal-title');
         const delBtn = document.getElementById('btn-delete');
-        
         document.getElementById('inp-id').value = "";
         document.getElementById('inp-amount').value = "";
         document.getElementById('inp-note').value = "";
@@ -856,15 +424,11 @@
             if(item) {
                 setModalType(item.type || 'expense');
                 document.getElementById('inp-id').value = item.id;
-                const displayVal = getDisplayAmount(item.amount).toFixed(2);
-                document.getElementById('inp-amount').value = displayVal;
-                
+                document.getElementById('inp-amount').value = getDisplayAmount(item.amount).toFixed(2);
                 setTimeout(() => {
-                    // 🔥 改动：设置隐藏 input 的值，并延迟渲染一下确保 UI 正确
                     document.getElementById('inp-category').value = item.category;
                     renderCategoryGrid(item.type || 'expense');
                 }, 50);
-                
                 document.getElementById('inp-date').valueAsDate = item.jsDate;
                 document.getElementById('inp-note').value = item.note;
                 title.innerText = "修改";
@@ -878,15 +442,13 @@
         toggleModal(true);
     }
     window.toggleModal = (show) => { const modal = document.getElementById('add-modal'); show ? modal.classList.remove('hidden') : modal.classList.add('hidden'); }
-    
-    // 统计逻辑
+
     window.setStatsType = (type) => {
         statsType = type;
         document.getElementById('st-expense').className = type === 'expense' ? 'stats-type-btn active' : 'stats-type-btn';
         document.getElementById('st-income').className = type === 'income' ? 'stats-type-btn active' : 'stats-type-btn';
         updateStatsView();
     }
-
     window.setStatsMode = (mode) => { statsMode = mode; document.getElementById('seg-week').className = mode === 'week' ? 'segment-btn active' : 'segment-btn'; document.getElementById('seg-month').className = mode === 'month' ? 'segment-btn active' : 'segment-btn'; updateStatsView(); }
     window.changeStatsDate = (offset) => {
         if (statsMode === 'week') currentStatsDate.setDate(currentStatsDate.getDate() + (offset * 7));
@@ -913,17 +475,9 @@
         }
         document.getElementById('stats-range-text').innerText = labelText;
         document.getElementById('chart-title').innerText = (statsType === 'expense' ? '支出' : '收入') + '趋势';
-        
-        const filtered = allExpenses.filter(e => 
-            e.jsDate >= startTime && 
-            e.jsDate <= endTime && 
-            e.type === statsType
-        );
-        
+        const filtered = allExpenses.filter(e => e.jsDate >= startTime && e.jsDate <= endTime && e.type === statsType );
         const totalBase = filtered.reduce((sum, e) => sum + e.amount, 0);
-        const displayTotal = getDisplayAmount(totalBase);
-        
-        document.getElementById('total-spending').innerText = displayTotal.toFixed(2);
+        document.getElementById('total-spending').innerText = getDisplayAmount(totalBase).toFixed(2);
         renderChart(filtered, startTime, endTime);
         renderCategoryRanks(filtered, totalBase);
     }
@@ -955,8 +509,7 @@
                     <span style="font-weight:bold;">${symbol}${catDisplay}</span>
                     <span style="font-size:12px; color:#999; margin-left:8px; width:35px; text-align:right;">${percent}%</span>
                 </div>
-                <div class="progress-bg"><div class="progress-fill" style="width:${percent}%"></div></div>
-            `;
+                <div class="progress-bg"><div class="progress-fill" style="width:${percent}%"></div></div>`;
             container.appendChild(div);
         });
     }
@@ -974,7 +527,6 @@
         items.sort((a,b) => b.jsDate - a.jsDate).forEach(item => {
             const displayVal = getDisplayAmount(item.amount).toFixed(1);
             const sign = item.type === 'income' ? '+' : '-';
-            // 🔥 修改这里：把 'black' 改成 'var(--text-main)'
             const color = item.type === 'income' ? 'var(--income-green)' : 'var(--text-main)';
             list.innerHTML += `
                 <div class="swipe-container">
@@ -987,8 +539,7 @@
                         <div class="card-amount" style="color:${color}">${sign}${symbol}${displayVal}</div>
                     </div>
                     <div class="delete-action" onclick="quickDelete('${item.id}')"><i class="fa-solid fa-trash-can"></i></div>
-                </div>
-            `;
+                </div>`;
         });
     }
     window.closeDetail = () => {
@@ -1000,23 +551,15 @@
     function renderChart(data, start, end) {
         const ctx = document.getElementById('myChart');
         if(myChart) myChart.destroy();
-        const labels = [];
-        const values = [];
-        const fullDates = [];
+        const labels = []; const values = []; const fullDates = [];
         const symbol = globalCurrency === 'AUD' ? '$' : '￥';
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
             const dayNum = d.getDate();
             const label = statsMode === 'week' ? dayNum + '日' : dayNum + '';
-            if(statsMode === 'month') {
-                if (dayNum === 1 || dayNum % 5 === 0) labels.push(label); else labels.push(""); 
-            } else { labels.push(label); }
+            if(statsMode === 'month') { if (dayNum === 1 || dayNum % 5 === 0) labels.push(label); else labels.push(""); } else { labels.push(label); }
             fullDates.push((d.getMonth()+1) + '月' + dayNum + '日');
             let dayTotalBase = 0;
-            data.forEach(e => {
-                if(e.jsDate.getDate() === d.getDate() && e.jsDate.getMonth() === d.getMonth()) {
-                    dayTotalBase += e.amount;
-                }
-            });
+            data.forEach(e => { if(e.jsDate.getDate() === d.getDate() && e.jsDate.getMonth() === d.getMonth()) { dayTotalBase += e.amount; } });
             values.push(getDisplayAmount(dayTotalBase));
         }
         myChart = new Chart(ctx, {
@@ -1026,8 +569,7 @@
                 datasets: [{
                     label: '金额', data: values,
                     borderColor: '#FF8296', backgroundColor: 'rgba(255, 130, 150, 0.1)',
-                    fill: true, tension: 0.4, 
-                    pointRadius: statsMode === 'week' ? 4 : 2, pointHitRadius: 20, pointHoverRadius: 6
+                    fill: true, tension: 0.4, pointRadius: statsMode === 'week' ? 4 : 2, pointHitRadius: 20, pointHoverRadius: 6
                 }]
             },
             options: {
@@ -1036,12 +578,8 @@
                 plugins: { 
                     legend: {display: false},
                     tooltip: {
-                        backgroundColor: 'rgba(255, 130, 150, 0.9)', 
-                        titleColor: '#fff', bodyColor: '#fff', displayColors: false, padding: 10, cornerRadius: 8,
-                        callbacks: {
-                            title: function(context) { return fullDates[context[0].dataIndex]; },
-                            label: function(context) { return symbol + ' ' + context.parsed.y.toFixed(1); }
-                        }
+                        backgroundColor: 'rgba(255, 130, 150, 0.9)', titleColor: '#fff', bodyColor: '#fff', displayColors: false, padding: 10, cornerRadius: 8,
+                        callbacks: { title: function(context) { return fullDates[context[0].dataIndex]; }, label: function(context) { return symbol + ' ' + context.parsed.y.toFixed(1); } }
                     }
                 },
                 scales: { x: { grid: {display: false}, ticks: { autoSkip: false, maxRotation: 0, font: {size: 11} } }, y: { display: false } },
@@ -1051,10 +589,8 @@
     }
 
     function getCategoryIcon(catName) {
-        // 合并支出和收入的配置，一起查找
         const allCats = [...categoryConfig.expense, ...categoryConfig.income];
         const found = allCats.find(c => c.name === catName);
-        // 如果找到了就用配置的图标，没找到就默认显示个箱子
         return found ? found.icon : "fa-box-open"; 
     }
 
@@ -1073,6 +609,4 @@
             updateStatsView();
         }
     }
-</script>
-</body>
-</html>
+</script></body></html>
